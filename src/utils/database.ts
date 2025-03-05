@@ -1,3 +1,4 @@
+// src/utils/database.ts
 import Database from 'better-sqlite3';
 import { Session, SummaryRow } from './types.js';
 import { join } from 'path';
@@ -10,11 +11,19 @@ const dbPath = join(paths.data, 'focus-cli.db');
 
 ensureDirSync(paths.data);
 
+// Custom error class
+export class FocusError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'FocusError';
+  }
+}
+
 export class FocusDatabase {
-  private db: InstanceType<typeof Database>; // Extract the type of the Database instance
+  private db: InstanceType<typeof Database>; // Corrected line
 
   constructor() {
-    this.db = new Database(dbPath); // Create an instance of the Database
+    this.db = new Database(dbPath);
     this.db.pragma('journal_mode = WAL');
     this.createSessionsTable();
   }
@@ -32,69 +41,49 @@ export class FocusDatabase {
   }
 
   createSession(id: string, startTime: string) {
-    const insertSQL = `
-      INSERT INTO sessions (id, start_time) VALUES (?, ?)
-    `;
+    const insertSQL = `INSERT INTO sessions (id, start_time) VALUES (?, ?)`;
     this.db.prepare(insertSQL).run(id, startTime);
   }
 
   getSession(id: string): Session | undefined {
-    const selectSQL = `
-      SELECT * FROM sessions WHERE id LIKE ? || '%'
-    `;
+    const selectSQL = `SELECT * FROM sessions WHERE id LIKE ? || '%'`;
     return this.db.prepare(selectSQL).get(id) as Session | undefined;
   }
 
   getOpenSession(): Session | undefined {
-    const selectSQL = `
-      SELECT * FROM sessions WHERE stop_time IS NULL
-    `;
+    const selectSQL = `SELECT * FROM sessions WHERE stop_time IS NULL`;
     return this.db.prepare(selectSQL).get() as Session | undefined;
   }
 
   stopSession(id: string, stopTime: string, duration: number) {
-    const updateSQL = `
-      UPDATE sessions SET stop_time = ?, duration = ? WHERE id LIKE ? || '%'
-    `;
+    const updateSQL = `UPDATE sessions SET stop_time = ?, duration = ? WHERE id = ?`;
     this.db.prepare(updateSQL).run(stopTime, duration, id);
   }
-
-  close() {
-    this.db.close();
-  }
-
-  
     getSessions(sort?: string): Session[] {
-      let selectSQL = `
-        SELECT * FROM sessions
-      `;
-  
+      let selectSQL = `SELECT * FROM sessions`;
+
       const sortSchema = z.string().regex(/^(date|duration)(:(asc|desc))?$/).optional();
-  
+
       if (sort) {
-        try {
-          sortSchema.parse(sort);
-        } catch (error: any) {
-          throw new Error(`Invalid sort format. Use date:asc, duration:desc, or date/duration. Error: ${error.message}`);
-        }
-  
+          sortSchema.parse(sort); // No need to check the result, just parse
+
         const [field, order] = sort.split(':');
         const sortBy = field;
-        const sortOrder = order || 'desc';
-  
+        const sortOrder = order || 'desc'; // Default to descending
+
         const validSortFields = ['date', 'duration'];
         if (!validSortFields.includes(sortBy)) {
-          throw new Error(`Invalid sort field: ${sortBy}`);
+          throw new FocusError(`Invalid sort field: ${sortBy}`); // Use FocusError
         }
-  
+
         const sortColumn = sortBy === 'date' ? 'start_time' : sortBy;
         const orderDirection = sortOrder === 'asc' ? 'ASC' : 'DESC';
-  
+
         selectSQL += ` ORDER BY ${sortColumn} ${orderDirection}`;
       } else {
-        selectSQL += ` ORDER BY start_time DESC`; // Default sort by date desc
+        selectSQL += ` ORDER BY start_time DESC`; // Default sort
       }
-  
+
       return this.db.prepare(selectSQL).all() as Session[];
     }
   getSummary() {
@@ -117,25 +106,24 @@ export class FocusDatabase {
   }
 
   getOverlappingSessions(startTime: string, stopTime: string): Session[] {
-    const selectSQL = `
-      SELECT * FROM sessions
-      WHERE (start_time <= ? AND (stop_time IS NULL OR stop_time >= ?))
-         OR (start_time >= ? AND stop_time <= ?)
-         OR (start_time <= ? AND (stop_time IS NULL OR stop_time >= ?)) AND start_time >= ? AND stop_time <= ?
-    `;
-    return this.db.prepare(selectSQL).all(startTime, stopTime, startTime, stopTime, startTime, stopTime, startTime, stopTime) as Session[];
+        const selectSQL = `
+            SELECT * FROM sessions
+            WHERE (start_time < ? AND stop_time > ?)
+            OR (start_time > ? AND start_time < ?)
+            OR (stop_time > ? AND stop_time < ?)
+        `;
+        return this.db.prepare(selectSQL).all(stopTime, startTime, startTime, stopTime, startTime, stopTime) as Session[];
+    }
+
+  deleteSession(id: string): void {
+    const deleteSQL = `DELETE FROM sessions WHERE id LIKE ? || '%'`;
+    const result = this.db.prepare(deleteSQL).run(id);
+    if (result.changes === 0) {
+      throw new FocusError('No session found with that ID.'); // Use FocusError
+    }
   }
 
-  deleteSession(id: string): string | undefined {
-    const deleteSQL = `
-      DELETE FROM sessions
-      WHERE id LIKE ? || '%'
-      RETURNING id;
-    `;
-    const result = this.db.prepare(deleteSQL).get(id) as { id: string } | undefined;
-    if (!result) {
-      throw new Error('NotFoundError');
-    }
-    return result.id;
+  close() {
+    this.db.close();
   }
 }

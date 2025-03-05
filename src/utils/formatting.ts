@@ -1,3 +1,4 @@
+// src/utils/formatting.ts
 import { format, differenceInSeconds } from 'date-fns';
 import humanizeDuration from 'humanize-duration';
 

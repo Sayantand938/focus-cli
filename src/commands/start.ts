@@ -1,7 +1,8 @@
-import { Command, Flags } from '@oclif/core';
+// src/commands/start.ts
+import { Command } from '@oclif/core';
 import { v4 as uuidv4 } from 'uuid';
-import { format } from 'date-fns';
-import { FocusDatabase } from '../utils/database.js';
+import { FocusDatabase, FocusError } from '../utils/database.js'; // Import FocusError
+import { formatDate } from '../utils/formatting.js'; // Use formatDate utility
 
 export default class Start extends Command {
   static description = 'Starts a focus session and logs the start time.';
@@ -13,30 +14,24 @@ export default class Start extends Command {
   async run(): Promise<void> {
     const db = new FocusDatabase();
     try {
-      // Generate a unique session ID
       const sessionId = uuidv4();
-
-      // Get the current time
       const now = new Date();
+      const startTime = now.toISOString(); // Store as ISO string
 
-      // Format the start time
-      const startTime = format(now, 'yyyy-MM-dd\'T\'HH:mm:ss.SSSxxx');
-      const formattedStartTime = format(now, 'MMM dd yyyy, hh:mm:ss a');
-
-      // Check for existing sessions with a null stop time
       const existingSession = db.getOpenSession();
       if (existingSession) {
-        this.log('There is already an active session.');
-        this.log(`Session ID: ${existingSession.id}`);
-        return;
+        throw new FocusError(`There is already an active session (ID: ${existingSession.id.substring(0,8)}).  Stop it first.`); // Use FocusError
       }
 
-      // Insert the new session into the database
       db.createSession(sessionId, startTime);
+      this.log(`Focus session started at ${formatDate(now, 'MMM dd yyyy, hh:mm:ss a')} with ID: ${sessionId.substring(0, 8)}`); // Use formatDate
 
-      this.log(`Focus session started at ${formattedStartTime} with ID: ${sessionId.substring(0, 8)}`);
     } catch (error: any) {
-      this.error(`Failed to start session: ${error.message}`);
+      if (error instanceof FocusError) {
+        this.error(error.message);
+      } else {
+        this.error(`Failed to start session: ${error.message}`);
+      }
     } finally {
       db.close();
     }

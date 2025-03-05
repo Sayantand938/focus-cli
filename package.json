@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "author": "coolmouse",
   "bin": {
-    "focus-cli": "./bin/run.js"
+    "focus": "./bin/run.js"
   },
   "bugs": "https://github.com/new-codes/focus-cli/issues",
   "dependencies": {

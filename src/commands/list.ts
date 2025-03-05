@@ -1,3 +1,4 @@
+// src/commands/list.ts
 import { Command, Flags } from '@oclif/core';
 import { FocusDatabase } from '../utils/database.js';
 import { Session } from '../utils/types.js';
@@ -37,12 +38,12 @@ export default class List extends Command {
 
       if (sessions.length === 0) {
         this.log('No sessions found.');
-      return;
+        return;
       }
 
       const table = new Table({
         head: [
-          chalk.blue.bold('ID'),      // Bold blue headers
+          chalk.blue.bold('ID'),
           chalk.blue.bold('Date'),
           chalk.blue.bold('Start Time'),
           chalk.blue.bold('Stop Time'),
@@ -51,7 +52,7 @@ export default class List extends Command {
         colAligns: ['center', 'center', 'center', 'center', 'center'],
         colWidths: [10, 12, 12, 12, 10],
         style: {
-          head: [], // Remove default head style (we're using chalk)
+          head: [], // Remove default head style
           border: ['#888888'],
           compact: false,
         }
@@ -71,7 +72,7 @@ export default class List extends Command {
           : '';
 
         table.push([
-          chalk.dim(session.id.substring(0, 8)), // Dimmed ID
+          chalk.dim(session.id.substring(0, 8)),
           formatDate(new Date(session.start_time), 'yyyy-MM-dd'),
           formatDate(new Date(session.start_time), 'hh:mm a'),
           session.stop_time ? formatDate(new Date(session.stop_time), 'hh:mm a') : chalk.gray('N/A'),

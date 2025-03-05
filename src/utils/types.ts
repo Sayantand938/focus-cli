@@ -1,3 +1,5 @@
+// src/utils/types.ts
+
 export interface Session {
   id: string;
   start_time: string;

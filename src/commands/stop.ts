@@ -1,7 +1,8 @@
-import { Command, Flags } from '@oclif/core';
-import { format, differenceInSeconds } from 'date-fns';
-import { FocusDatabase } from '../utils/database.js';
-import humanizeDuration from 'humanize-duration';
+// src/commands/stop.ts
+import { Command } from '@oclif/core';
+import { differenceInSeconds } from 'date-fns';
+import { FocusDatabase, FocusError } from '../utils/database.js'; // Import FocusError
+import { formatDate, formatDuration } from '../utils/formatting.js';
 
 export default class Stop extends Command {
   static description = 'Stops the current focus session and records the stop time and duration.';
@@ -13,37 +14,27 @@ export default class Stop extends Command {
   async run(): Promise<void> {
     const db = new FocusDatabase();
     try {
-      // Get the current time
       const now = new Date();
+      const stopTime = now.toISOString(); // Store as ISO string
 
-      // Format the stop time
-      const stopTime = format(now, 'yyyy-MM-dd\'T\'HH:mm:ss.SSSxxx');
-      const formattedStopTime = format(now, 'MMM dd yyyy, hh:mm:ss a');
-
-      // Get the active session from the database
       const session = db.getOpenSession();
-
       if (!session) {
-        this.error('No active session found.');
-        return;
+        throw new FocusError('No active session found.'); // Use FocusError
       }
 
-      // Calculate the session duration
       const startTime = new Date(session.start_time);
       const durationInSeconds = differenceInSeconds(now, startTime);
 
-      // Humanize the duration
-      const humanizedDuration = humanizeDuration(durationInSeconds * 1000, {
-        units: ['h', 'm', 's'],
-        round: true,
-      });
-
-      // Update the session in the database
       db.stopSession(session.id, stopTime, durationInSeconds);
+      this.log(`Focus session stopped at ${formatDate(now, 'MMM dd yyyy, hh:mm:ss a')}. Duration: ${formatDuration(durationInSeconds)}`); // Use formatDate and formatDuration
 
-      this.log(`Focus session stopped at ${formattedStopTime}. Duration: ${humanizedDuration}`);
     } catch (error: any) {
-      this.error(`Failed to stop session: ${error.message}`);
+      if (error instanceof FocusError) {
+          this.error(error.message);
+      }
+      else{
+        this.error(`Failed to stop session: ${error.message}`);
+      }
     } finally {
       db.close();
     }

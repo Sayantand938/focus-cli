@@ -1,7 +1,7 @@
+// src/commands/summary.ts
 import { Command } from '@oclif/core';
 import { FocusDatabase } from '../utils/database.js';
-import { Session, SummaryRow } from '../utils/types.js';
-import { format } from 'date-fns';
+import { SummaryRow } from '../utils/types.js';
 import Table from 'cli-table3';
 import chalk from 'chalk';
 
@@ -23,7 +23,7 @@ export default class Summary extends Command {
 
       const table = new Table({
         head: [
-          chalk.blue.bold('SL'),      // Bold blue headers
+          chalk.blue.bold('SL'),
           chalk.blue.bold('Date'),
           chalk.blue.bold('Average'),
           chalk.blue.bold('Total'),
@@ -32,7 +32,7 @@ export default class Summary extends Command {
         colAligns: ['center', 'center', 'center', 'center', 'center'],
         colWidths: [5, 12, 10, 10, 8],
         style: {
-          head: [], // Remove default head style (we're using chalk)
+          head: [], // Remove default head style
           border: ['#888888'],
           compact: false,
         }

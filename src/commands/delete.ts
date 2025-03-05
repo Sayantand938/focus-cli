@@ -1,5 +1,6 @@
+// src/commands/delete.ts
 import { Command, Args } from '@oclif/core';
-import { FocusDatabase } from '../utils/database.js';
+import { FocusDatabase, FocusError } from '../utils/database.js'; // Import FocusError
 
 export default class Delete extends Command {
   static description = 'Deletes a session using first 8 characters of its ID.';
@@ -20,10 +21,10 @@ export default class Delete extends Command {
       db.deleteSession(args.id);
       this.log(`✅ Session ${args.id}... deleted successfully.`);
     } catch (error: any) {
-      if (error.message === 'NotFoundError') {
-        this.error('❌ Error: No session found with that ID.');
+      if (error instanceof FocusError) {
+          this.error(error.message);  // Consistent error handling
       } else {
-        this.error(`Failed to delete session: ${error.message}`);
+          this.error(`Failed to delete session: ${error.message}`);
       }
     } finally {
       db.close();
