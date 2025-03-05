@@ -41,7 +41,7 @@ columns = [
   { name = "id", type = "TEXT", constraints = "PRIMARY KEY (UUID)" },
   { name = "start_time", type = "TEXT", constraints = "NOT NULL (ISO 8601)" },
   { name = "stop_time", type = "TEXT", constraints = "NULL (set when session stops)" },
-  { name = "duration", type = "INTEGER", constraints = "NULL (stored in seconds)" }
+  { name = "duration", type = "INTEGER", constraints = "NULL (stored in seconds)" },
 ]
 
 [features]
@@ -61,7 +61,7 @@ columns = [
   { name = "Date", description = "Group sessions by date (YYYY-MM-DD)" },
   { name = "Average", description = "Average session duration per day (hh:mm)" },
   { name = "Total", description = "Total focus time per day (hh:mm)" },
-  { name = "Status", description = "✅ if total >= 8h, else ❌" }
+  { name = "Status", description = "✅ if total >= 8h, else ❌" },
 ]
 status_condition = "✅ if total >= 8 hours, otherwise ❌"
 grouping = "Sessions are grouped by DATE(start_time)"
@@ -87,7 +87,7 @@ query = """
 
 [delete.command]
 description = "Deletes a session using first 8 characters of its ID."
-confirmation_required = true
+confirmation_required = false
 error_if_not_found = true
 user_friendly_message = "Session successfully deleted."
 
@@ -110,7 +110,7 @@ columns = [
   { name = "Date", description = "Session date (YYYY-MM-DD)" },
   { name = "Start Time", description = "HH:MM AM/PM format" },
   { name = "Stop Time", description = "HH:MM AM/PM format" },
-  { name = "Duration", description = "hh:mm format" }
+  { name = "Duration", description = "hh:mm format" },
 ]
 uuid_format = "First 8 characters only"
 time_format = "HH:MM AM/PM for start/stop, hh:mm for duration"
@@ -136,5 +136,5 @@ custom_messages = [
   { error = "DatabaseError", message = "❌ Database issue, please try again later." },
   { error = "NotFoundError", message = "❌ Error: No session found with that ID." },
   { error = "ValidationError", message = "❌ Invalid input. Please check and try again." },
-  { error = "UnknownError", message = "❌ Something went wrong. Please try again later." }
+  { error = "UnknownError", message = "❌ Something went wrong. Please try again later." },
 ]

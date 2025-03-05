@@ -105,6 +105,9 @@ export class FocusDatabase {
       RETURNING id;
     `;
     const result = this.db.prepare(deleteSQL).get(id) as { id: string } | undefined;
-    return result ? result.id : undefined;
+    if (!result) {
+      throw new Error('NotFoundError');
+    }
+    return result.id;
   }
 }
