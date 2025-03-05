@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import { Session, SummaryRow } from './types.js';
 import { join } from 'path';
+import { z } from 'zod';
 import envPaths from 'env-paths';
 import { ensureDirSync } from 'fs-extra';
 
@@ -62,13 +63,40 @@ export class FocusDatabase {
     this.db.close();
   }
 
-  getSessions(): Session[] {
-    const selectSQL = `
-      SELECT * FROM sessions
-    `;
-    return this.db.prepare(selectSQL).all() as Session[];
-  }
-
+  
+    getSessions(sort?: string): Session[] {
+      let selectSQL = `
+        SELECT * FROM sessions
+      `;
+  
+      const sortSchema = z.string().regex(/^(date|duration)(:(asc|desc))?$/).optional();
+  
+      if (sort) {
+        try {
+          sortSchema.parse(sort);
+        } catch (error: any) {
+          throw new Error(`Invalid sort format. Use date:asc, duration:desc, or date/duration. Error: ${error.message}`);
+        }
+  
+        const [field, order] = sort.split(':');
+        const sortBy = field;
+        const sortOrder = order || 'desc';
+  
+        const validSortFields = ['date', 'duration'];
+        if (!validSortFields.includes(sortBy)) {
+          throw new Error(`Invalid sort field: ${sortBy}`);
+        }
+  
+        const sortColumn = sortBy === 'date' ? 'start_time' : sortBy;
+        const orderDirection = sortOrder === 'asc' ? 'ASC' : 'DESC';
+  
+        selectSQL += ` ORDER BY ${sortColumn} ${orderDirection}`;
+      } else {
+        selectSQL += ` ORDER BY start_time DESC`; // Default sort by date desc
+      }
+  
+      return this.db.prepare(selectSQL).all() as Session[];
+    }
   getSummary() {
     const summarySQL = `
       SELECT

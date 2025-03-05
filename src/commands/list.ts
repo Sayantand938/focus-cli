@@ -1,6 +1,7 @@
-import { Command } from '@oclif/core';
+import { Command, Flags } from '@oclif/core';
 import { FocusDatabase } from '../utils/database.js';
 import { Session } from '../utils/types.js';
+import { z } from 'zod';
 import Table from 'cli-table3';
 import chalk from 'chalk';
 import { formatDate, getDurationParts, formatDurationParts } from '../utils/formatting.js';
@@ -10,15 +11,33 @@ export default class List extends Command {
 
   static examples = [`$ focus list`];
 
+  static flags = {
+    sort: Flags.string({
+      char: 's',
+      description: 'Sort by date or duration (e.g., date:asc, duration:desc)',
+      parse: async (input: string) => {
+        const sortSchema = z.string().regex(/^(date|duration)(:(asc|desc))?$/);
+        try {
+          sortSchema.parse(input);
+          return input;
+        } catch (error: any) {
+          throw new Error('Invalid sort format. Use date:asc, duration:desc, or date/duration.');
+        }
+      },
+    }),
+  };
+
   async run(): Promise<void> {
+    const { flags } = await this.parse(List);
+    const { sort } = flags;
     const db = new FocusDatabase();
 
     try {
-      const sessions: Session[] = db.getSessions();
+      const sessions: Session[] = db.getSessions(sort);
 
       if (sessions.length === 0) {
         this.log('No sessions found.');
-        return;
+      return;
       }
 
       const table = new Table({
