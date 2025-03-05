@@ -87,4 +87,14 @@ export class FocusDatabase {
     `;
     return this.db.prepare(summarySQL).all() as SummaryRow[];
   }
+
+  deleteSession(id: string): string | undefined {
+    const deleteSQL = `
+      DELETE FROM sessions
+      WHERE id LIKE ? || '%'
+      RETURNING id;
+    `;
+    const result = this.db.prepare(deleteSQL).get(id) as { id: string } | undefined;
+    return result ? result.id : undefined;
+  }
 }

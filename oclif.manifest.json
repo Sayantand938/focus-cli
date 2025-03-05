@@ -1,0 +1,97 @@
+{
+  "commands": {
+    "list": {
+      "aliases": [],
+      "args": {},
+      "description": "Shows all sessions in a table (formatted times, shortened UUIDs)",
+      "examples": [
+        "$ focus list"
+      ],
+      "flags": {},
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "list",
+      "pluginAlias": "focus-cli",
+      "pluginName": "focus-cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "list.js"
+      ]
+    },
+    "start": {
+      "aliases": [],
+      "args": {},
+      "description": "Starts a focus session and logs the start time.",
+      "examples": [
+        "$ focus start"
+      ],
+      "flags": {},
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "start",
+      "pluginAlias": "focus-cli",
+      "pluginName": "focus-cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "start.js"
+      ]
+    },
+    "stop": {
+      "aliases": [],
+      "args": {},
+      "description": "Stops the current focus session and records the stop time and duration.",
+      "examples": [
+        "$ focus stop"
+      ],
+      "flags": {},
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "stop",
+      "pluginAlias": "focus-cli",
+      "pluginName": "focus-cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "stop.js"
+      ]
+    },
+    "summary": {
+      "aliases": [],
+      "args": {},
+      "description": "Shows total & average focus time per day with ✅ or ❌",
+      "examples": [
+        "$ focus summary"
+      ],
+      "flags": {},
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "summary",
+      "pluginAlias": "focus-cli",
+      "pluginName": "focus-cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "summary.js"
+      ]
+    }
+  },
+  "version": "0.0.0"
+}
