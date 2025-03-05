@@ -40,9 +40,9 @@ function formatSessionRow(session: Session): string[] {
     ];
 }
 
-function formatSummaryRow(row: SummaryRow): string[] {
+function formatSummaryRow(index: number, row: SummaryRow): string[] {
     return [
-        String(row.SL),
+        chalk.dim(String(index + 1)),
         row.Date,
         row.Average,
         row.Total,
@@ -53,7 +53,7 @@ function formatSummaryRow(row: SummaryRow): string[] {
 function generateAndDisplayTable(command: Command, data: Session[] | SummaryRow[], tableType: 'sessions' | 'summary'): void {
     const head = tableType === 'sessions'
         ? ['ID', 'Date', 'Start Time', 'Stop Time', 'Duration']
-        : ['SL', 'Date', 'Average', 'Total', 'Status'];
+        : ['SL', 'Date', 'Average', 'Total', 'Goal'];
 
     const table = createBaseTable(head);
 
@@ -62,8 +62,8 @@ function generateAndDisplayTable(command: Command, data: Session[] | SummaryRow[
         table.push(formatSessionRow(session));
       }
     } else {
-        for (const row of data as SummaryRow[]) {
-            table.push(formatSummaryRow(row));
+        for (const [index, row] of (data as SummaryRow[]).entries()) {
+            table.push(formatSummaryRow(index, row));
         }
     }
 
