@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { Session } from './types.js';
+import { Session, SummaryRow } from './types.js';
 import { join } from 'path';
 import envPaths from 'env-paths';
 import { ensureDirSync } from 'fs-extra';
@@ -67,5 +67,24 @@ export class FocusDatabase {
       SELECT * FROM sessions
     `;
     return this.db.prepare(selectSQL).all() as Session[];
+  }
+
+  getSummary() {
+    const summarySQL = `
+      SELECT
+        ROW_NUMBER() OVER () AS SL,
+        DATE(start_time) AS Date,
+        strftime('%H:%M', AVG(duration), 'unixepoch') AS Average,
+        strftime('%H:%M', SUM(duration), 'unixepoch') AS Total,
+        CASE
+          WHEN SUM(duration) >= 28800 THEN '✅'
+          ELSE '❌'
+        END AS Status
+      FROM sessions
+      WHERE stop_time IS NOT NULL
+      GROUP BY DATE(start_time)
+      ORDER BY Date DESC;
+    `;
+    return this.db.prepare(summarySQL).all() as SummaryRow[];
   }
 }

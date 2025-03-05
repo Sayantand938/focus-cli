@@ -4,3 +4,11 @@ export interface Session {
   stop_time: string | null;
   duration: number | null;
 }
+
+export interface SummaryRow {
+  SL: number;
+  Date: string;
+  Average: string;
+  Total: string;
+  Status: string;
+}
