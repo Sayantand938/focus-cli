@@ -72,23 +72,30 @@ export default class Add extends Command {
         return;
       }
 
-      // 3. Store Session
-      const sessionId = uuidv4();
+      // 3. Check for overlapping sessions
       const startTimeISO = startTime.toISOString();
       const stopTimeISO = stopTime.toISOString();
+      const overlappingSessions = db.getOverlappingSessions(startTimeISO, stopTimeISO);
+      if (overlappingSessions.length > 0) {
+        const overlappingSession = overlappingSessions[0];
+        const overlappingStartTime = formatDate(new Date(overlappingSession.start_time), 'hh:mm a');
+        const overlappingStopTime = overlappingSession.stop_time ? formatDate(new Date(overlappingSession.stop_time), 'hh:mm a') : 'Ongoing';
+        this.error(`Overlapping session: ${overlappingStartTime} - ${overlappingStopTime}`);
+        return;
+      }
+
+      // 4. Store Session
+      const sessionId = uuidv4();
 
       db.createSession(sessionId, startTimeISO);
 
       const durationInSeconds = Math.floor((stopTime.getTime() - startTime.getTime()) / 1000);
       db.stopSession(sessionId, stopTimeISO, durationInSeconds);
 
-      this.log(`Focus session added with ID: ${sessionId.substring(0, 8)}`);
-      this.log(`Start time: ${formatDate(startTime, 'MMM dd yyyy, hh:mm:ss a')}`);
-      this.log(`Stop time: ${formatDate(stopTime, 'MMM dd yyyy, hh:mm:ss a')}`);
-      this.log(`Duration: ${formatDuration(durationInSeconds)}`);
+      this.log(`Session added: ${formatDate(startTime, 'hh:mm a')} - ${formatDate(stopTime, 'hh:mm a')} (${formatDuration(durationInSeconds)})`);
 
     } catch (error: any) {
-      // 4.  Handle Zod Errors (and others) Gracefully
+      // 5.  Handle Zod Errors (and others) Gracefully
       if (error instanceof z.ZodError) {
         this.error(error.errors.map((e: z.ZodIssue) => e.message).join('\n')); // Type e as ZodIssue
       } else {

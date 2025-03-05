@@ -88,6 +88,16 @@ export class FocusDatabase {
     return this.db.prepare(summarySQL).all() as SummaryRow[];
   }
 
+  getOverlappingSessions(startTime: string, stopTime: string): Session[] {
+    const selectSQL = `
+      SELECT * FROM sessions
+      WHERE (start_time <= ? AND (stop_time IS NULL OR stop_time >= ?))
+         OR (start_time >= ? AND stop_time <= ?)
+         OR (start_time <= ? AND (stop_time IS NULL OR stop_time >= ?)) AND start_time >= ? AND stop_time <= ?
+    `;
+    return this.db.prepare(selectSQL).all(startTime, stopTime, startTime, stopTime, startTime, stopTime, startTime, stopTime) as Session[];
+  }
+
   deleteSession(id: string): string | undefined {
     const deleteSQL = `
       DELETE FROM sessions
