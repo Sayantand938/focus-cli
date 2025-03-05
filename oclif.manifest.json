@@ -4,9 +4,7 @@
       "aliases": [],
       "args": {},
       "description": "Shows all sessions in a table (formatted times, shortened UUIDs)",
-      "examples": [
-        "$ focus list"
-      ],
+      "examples": ["$ focus list"],
       "flags": {},
       "hasDynamicHelp": false,
       "hiddenAliases": [],
@@ -17,19 +15,13 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "list.js"
-      ]
+      "relativePath": ["dist", "commands", "list.js"]
     },
     "start": {
       "aliases": [],
       "args": {},
       "description": "Starts a focus session and logs the start time.",
-      "examples": [
-        "$ focus start"
-      ],
+      "examples": ["$ focus start"],
       "flags": {},
       "hasDynamicHelp": false,
       "hiddenAliases": [],
@@ -40,19 +32,13 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "start.js"
-      ]
+      "relativePath": ["dist", "commands", "start.js"]
     },
     "stop": {
       "aliases": [],
       "args": {},
       "description": "Stops the current focus session and records the stop time and duration.",
-      "examples": [
-        "$ focus stop"
-      ],
+      "examples": ["$ focus stop"],
       "flags": {},
       "hasDynamicHelp": false,
       "hiddenAliases": [],
@@ -63,19 +49,13 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "stop.js"
-      ]
+      "relativePath": ["dist", "commands", "stop.js"]
     },
     "summary": {
       "aliases": [],
       "args": {},
       "description": "Shows total & average focus time per day with ✅ or ❌",
-      "examples": [
-        "$ focus summary"
-      ],
+      "examples": ["$ focus summary"],
       "flags": {},
       "hasDynamicHelp": false,
       "hiddenAliases": [],
@@ -86,11 +66,32 @@
       "strict": true,
       "enableJsonFlag": false,
       "isESM": true,
-      "relativePath": [
-        "dist",
-        "commands",
-        "summary.js"
-      ]
+      "relativePath": ["dist", "commands", "summary.js"]
+    },
+    "add": {
+      "aliases": [],
+      "args": {
+        "timeRange": {
+          "description": "Time range in the format \"HH:MM AM/PM - HH:MM AM/PM\"",
+          "input": [],
+          "name": "timeRange",
+          "options": {},
+          "type": "string"
+        }
+      },
+      "description": "Adds a focus session with a specified time range.",
+      "examples": ["$ focus add \"08:00 AM - 10:00 AM\""],
+      "flags": {},
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "add",
+      "pluginAlias": "focus-cli",
+      "pluginName": "focus-cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": ["dist", "commands", "add.js"]
     }
   },
   "version": "0.0.0"
