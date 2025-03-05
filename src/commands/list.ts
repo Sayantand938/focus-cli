@@ -1,9 +1,9 @@
 import { Command } from '@oclif/core';
 import { FocusDatabase } from '../utils/database.js';
 import { Session } from '../utils/types.js';
-import { format } from 'date-fns';
 import Table from 'cli-table3';
 import chalk from 'chalk';
+import { formatDate, getDurationParts, formatDurationParts } from '../utils/formatting.js';
 
 export default class List extends Command {
   static description = 'Shows all sessions in a table (formatted times, shortened UUIDs)';
@@ -46,17 +46,16 @@ export default class List extends Command {
       }
 
       for (const session of sessions) {
-        const hours = session.duration ? Math.floor(session.duration / 3600) : 0;
-        const minutes = session.duration ? Math.floor((session.duration % 3600) / 60) : 0;
+        const { hours, minutes } = getDurationParts(session.duration);
         const duration = session.duration
-          ? `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+          ? formatDurationParts(hours, minutes)
           : '';
 
         table.push([
           chalk.dim(session.id.substring(0, 8)), // Dimmed ID
-          format(new Date(session.start_time), 'yyyy-MM-dd'),
-          format(new Date(session.start_time), 'hh:mm a'),
-          session.stop_time ? format(new Date(session.stop_time), 'hh:mm a') : chalk.gray('N/A'),
+          formatDate(new Date(session.start_time), 'yyyy-MM-dd'),
+          formatDate(new Date(session.start_time), 'hh:mm a'),
+          session.stop_time ? formatDate(new Date(session.stop_time), 'hh:mm a') : chalk.gray('N/A'),
           duration,
         ]);
       }
