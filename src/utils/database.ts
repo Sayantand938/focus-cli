@@ -20,7 +20,7 @@ export class FocusError extends Error {
 }
 
 export class FocusDatabase {
-  private db: InstanceType<typeof Database>; // Corrected line
+  private db: InstanceType<typeof Database>;
 
   constructor() {
     this.db = new Database(dbPath);
@@ -59,8 +59,14 @@ export class FocusDatabase {
     const updateSQL = `UPDATE sessions SET stop_time = ?, duration = ? WHERE id = ?`;
     this.db.prepare(updateSQL).run(stopTime, duration, id);
   }
-    getSessions(sort?: string): Session[] {
-      let selectSQL = `SELECT * FROM sessions`;
+    getSessions(sort?: string, filter?: { field: string; operator: string; value: number }): Session[] {
+        let selectSQL = `SELECT * FROM sessions`;
+
+        // Add WHERE clause if filter is provided
+        if (filter) {
+            selectSQL += ` WHERE ${filter.field} ${filter.operator} ?`;
+        }
+
 
       const sortSchema = z.string().regex(/^(date|duration)(:(asc|desc))?$/).optional();
 
@@ -84,7 +90,10 @@ export class FocusDatabase {
         selectSQL += ` ORDER BY start_time DESC`; // Default sort
       }
 
-      return this.db.prepare(selectSQL).all() as Session[];
+      // Prepare and execute the query, binding the filter value if it exists
+      const stmt = this.db.prepare(selectSQL);
+      const result = filter ? stmt.all(filter.value) : stmt.all();
+      return result as Session[];
     }
   getSummary() {
     const summarySQL = `
