@@ -1,20 +1,43 @@
 // src/commands/summary.ts
-import { Command } from '@oclif/core';
+import { Command, Flags } from '@oclif/core';
 import { FocusDatabase } from '../utils/database.js';
 import { SummaryRow } from '../utils/types.js';
 import Table from 'cli-table3';
 import chalk from 'chalk';
+import { z } from 'zod';
 
 export default class Summary extends Command {
   static description = 'Shows total & average focus time per day with ✅ or ❌';
+  static flags = {
+    sort: Flags.string({
+      char: 's',
+      description: 'Sort by total, average, or date (e.g., total:asc, date:desc)',
+      options: ['total:asc', 'total:desc', 'average:asc', 'average:desc', 'date:asc', 'date:desc'],
+      parse: async (input: string) => {
+        const sortSchema = z.string().regex(/^(total|average|date)(:(asc|desc))?$/);
+        try {
+          sortSchema.parse(input);
+          return input;
+        } catch (error: any) {
+          throw new Error('Invalid sort format. Use total:asc, date:desc, average:asc, or total/date/average.');
+        }
+      },
+    }),
+  };
 
-  static examples = [`$ focus summary`];
+  static examples = [
+    `$ focus summary`,
+    `$ focus summary --sort total:asc`,
+    `$ focus summary --sort date:desc`,
+  ];
 
   async run(): Promise<void> {
+    const { flags } = await this.parse(Summary);
+    const { sort } = flags;
     const db = new FocusDatabase();
 
     try {
-      const summaryData: SummaryRow[] = db.getSummary();
+      const summaryData: SummaryRow[] = db.getSummary(sort);
 
       if (summaryData.length === 0) {
         this.log('No sessions found.');

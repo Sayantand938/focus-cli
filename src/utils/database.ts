@@ -95,8 +95,8 @@ export class FocusDatabase {
       const result = filter ? stmt.all(filter.value) : stmt.all();
       return result as Session[];
     }
-  getSummary() {
-    const summarySQL = `
+  getSummary(sort?: string) {
+    let summarySQL = `
       SELECT
         ROW_NUMBER() OVER () AS SL,
         DATE(start_time) AS Date,
@@ -109,8 +109,26 @@ export class FocusDatabase {
       FROM sessions
       WHERE stop_time IS NOT NULL
       GROUP BY DATE(start_time)
-      ORDER BY Date DESC;
-    `;
+      `;
+
+    if (sort) {
+      const [field, order] = sort.split(':');
+      const sortBy = field;
+      const sortOrder = order || 'desc'; // Default to descending
+
+      const validSortFields = ['total', 'average', 'date'];
+      if (!validSortFields.includes(sortBy)) {
+        throw new FocusError(`Invalid sort field: ${sortBy}`); // Use FocusError
+      }
+
+      const sortColumn = sortBy === 'date' ? 'Date' : sortBy;
+      const orderDirection = sortOrder === 'asc' ? 'ASC' : 'DESC';
+
+      summarySQL += ` ORDER BY ${sortColumn} ${orderDirection}`;
+    } else {
+      summarySQL += ` ORDER BY Date DESC`; // Default sort
+    }
+
     return this.db.prepare(summarySQL).all() as SummaryRow[];
   }
 
