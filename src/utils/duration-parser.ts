@@ -1,6 +1,6 @@
 // src/utils/duration-parser.ts
 
-import { FocusError } from "./database.js";
+import { FocusError } from "./error-utils.js"; // Corrected import
 
 export function parseDurationStringToSeconds(durationString: string): number {
     const regex = /(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?/;

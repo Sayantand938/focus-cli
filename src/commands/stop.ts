@@ -1,7 +1,8 @@
 // src/commands/stop.ts
 import { Command } from '@oclif/core';
 import { differenceInSeconds } from 'date-fns';
-import { FocusDatabase, FocusError } from '../utils/database.js'; // Import FocusError
+import { FocusDatabase } from '../utils/database.js';
+import { FocusError } from '../utils/error-utils.js'; // Corrected import
 import { formatDate, formatDuration } from '../utils/formatting.js';
 
 export default class Stop extends Command {

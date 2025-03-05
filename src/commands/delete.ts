@@ -1,6 +1,7 @@
 // src/commands/delete.ts
 import { Command, Args } from '@oclif/core';
-import { FocusDatabase, FocusError } from '../utils/database.js'; // Import FocusError
+import { FocusDatabase } from '../utils/database.js';
+import { FocusError } from '../utils/error-utils.js'; // Corrected import
 
 export default class Delete extends Command {
   static description = 'Deletes a session using first 8 characters of its ID.';
