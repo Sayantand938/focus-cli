@@ -61,4 +61,11 @@ export class FocusDatabase {
   close() {
     this.db.close();
   }
+
+  getSessions(): Session[] {
+    const selectSQL = `
+      SELECT * FROM sessions
+    `;
+    return this.db.prepare(selectSQL).all() as Session[];
+  }
 }
