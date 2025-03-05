@@ -2,11 +2,11 @@
 import Database from 'better-sqlite3';
 import { Session, SummaryRow } from './types.js';
 import { join } from 'path';
-import { z } from 'zod';
 import envPaths from 'env-paths';
 import { ensureDirSync } from 'fs-extra';
-import { FocusError } from './error-utils.js'; // Import FocusError
+import { FocusError } from './error-utils.js';
 import { SortOption, getOrderByClause } from './sort-utils.js';
+import { FilterOption, getHavingClause, getWhereClause } from './filter-utils.js';
 
 const paths = envPaths('focus-cli', { suffix: '' });
 const dbPath = join(paths.data, 'focus-cli.db');
@@ -53,22 +53,17 @@ export class FocusDatabase {
         const updateSQL = `UPDATE sessions SET stop_time = ?, duration = ? WHERE id = ?`;
         this.db.prepare(updateSQL).run(stopTime, duration, id);
     }
-    getSessions(sortOption: SortOption, filter?: { field: string; operator: string; value: number }): Session[] {
+    getSessions(sortOption: SortOption, filter?: FilterOption): Session[] {
         let selectSQL = `SELECT * FROM sessions`;
 
-        // Add WHERE clause if filter is provided
-        if (filter) {
-            selectSQL += ` WHERE ${filter.field} ${filter.operator} ?`;
-        }
-
+        selectSQL += ` ${getWhereClause(filter)}`;
         selectSQL += ` ${getOrderByClause(sortOption, 'sessions')}`;
 
-        // Prepare and execute the query, binding the filter value if it exists
         const stmt = this.db.prepare(selectSQL);
         const result = filter ? stmt.all(filter.value) : stmt.all();
         return result as Session[];
     }
-    getSummary(sortOption: SortOption): SummaryRow[] {
+    getSummary(sortOption: SortOption, filter?: FilterOption): SummaryRow[] {
         let summarySQL = `
       SELECT
         ROW_NUMBER() OVER () AS SL,
@@ -84,9 +79,12 @@ export class FocusDatabase {
       GROUP BY DATE(start_time)
       `;
 
+        summarySQL += ` ${getHavingClause(filter)}`;
         summarySQL += ` ${getOrderByClause(sortOption, 'summary')}`;
 
-        return this.db.prepare(summarySQL).all() as SummaryRow[];
+        const stmt = this.db.prepare(summarySQL);
+        const result = filter ? stmt.all(filter.value) : stmt.all();
+        return result as SummaryRow[];
     }
 
     getOverlappingSessions(startTime: string, stopTime: string): Session[] {
@@ -103,7 +101,7 @@ export class FocusDatabase {
         const deleteSQL = `DELETE FROM sessions WHERE id LIKE ? || '%'`;
         const result = this.db.prepare(deleteSQL).run(id);
         if (result.changes === 0) {
-            throw new FocusError('No session found with that ID.'); // Use FocusError
+            throw new FocusError('No session found with that ID.');
         }
     }
 

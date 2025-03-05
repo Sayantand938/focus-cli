@@ -1,24 +1,12 @@
 // src/commands/list.ts
 import { Command, Flags } from '@oclif/core';
 import { FocusDatabase } from '../utils/database.js';
-import { FocusError } from '../utils/error-utils.js'; // Corrected import
-import { z } from 'zod';
+import { FocusError } from '../utils/error-utils.js';
 import { parseDurationStringToSeconds } from '../utils/duration-parser.js';
-import { parseSortString, SortFlag, SortOption } from '../utils/sort-utils.js'; // Import SortFlag
+import { parseSortString, SortFlag, SortOption } from '../utils/sort-utils.js';
 import { generateAndDisplayTable } from '../utils/table-utils.js';
+import { parseFilterString, sessionFilterSchema, FilterOption } from '../utils/filter-utils.js'; // Import from filter-utils
 
-const filterSchema = z.object({
-    field: z.literal('duration'),
-    operator: z.enum(['>=', '<=', '=', '>', '<']),
-    value: z.string().refine(value => {
-        try {
-            parseDurationStringToSeconds(value);
-            return true;
-        } catch {
-            return false;
-        }
-    }, { message: "Invalid duration format.  Examples: 1h, 30m, 1h30m" })
-});
 
 interface ListFlags {
     sort: SortOption;
@@ -35,45 +23,24 @@ export default class List extends Command {
     ];
 
     static flags = {
-        sort: SortFlag({  // Use the custom SortFlag
+        sort: SortFlag({
             char: 's',
             description: 'Sort by date or duration (e.g., date:asc, duration:desc)',
         }),
         filter: Flags.string({
             char: 'f',
             description: 'Filter sessions (e.g., duration>=1h30m)',
-            parse: async (input) => {
-                try {
-                    const match = input.match(/^(duration)\s*([>=<!]=?)\s*(.+)$/);
-                    if (!match) {
-                        throw new FocusError("Invalid filter format");
-                    }
-                    const [, field, operator, value] = match;
-
-                    const parsedFilter = filterSchema.parse({ field, operator, value });
-                    return input; // Return the *original* input string, not the parsed object
-                } catch (error) {
-                    if (error instanceof z.ZodError) {
-                        throw new FocusError(error.errors.map((e) => e.message).join('\n'));
-                    } else if (error instanceof FocusError) {
-                        throw error;
-                    } else if (error instanceof Error) {
-                        throw new FocusError(`Invalid filter: ${error.message}`);
-                    } else {
-                        throw new FocusError(`Invalid filter: An unexpected error occurred.`);
-                    }
-                }
-            }
+            parse: async (input) => parseFilterString(input, sessionFilterSchema), // Use parseFilterString
         })
     };
 
     async run(): Promise<void> {
         const { flags } = await this.parse(List);
-        const { sort, filter } = flags as ListFlags; // Cast to the ListFlags interface
+        const { sort, filter } = flags as ListFlags;
         const db = new FocusDatabase();
 
         try {
-            let parsedFilter = undefined;
+            let parsedFilter: FilterOption = undefined;
 
             if (filter) {
                 const match = filter.match(/^(duration)\s*([>=<!]=?)\s*(.+)$/);
