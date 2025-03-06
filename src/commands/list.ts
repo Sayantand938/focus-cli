@@ -5,65 +5,108 @@ import { FocusError } from '../utils/error-utils.js';
 import { parseDurationStringToSeconds } from '../utils/duration-parser.js';
 import { parseSortString, SortFlag, SortOption } from '../utils/sort-utils.js';
 import { generateAndDisplayTable } from '../utils/table-utils.js';
-import { parseFilterString, sessionFilterSchema, FilterOption, parseAndValidateFilter } from '../utils/filter-utils.js'; // Import from filter-utils
-
+import {
+  parseFilterString,
+  sessionFilterSchema,
+  FilterOption,
+  parseAndValidateFilter,
+} from '../utils/filter-utils.js';
 
 interface ListFlags {
-    sort: SortOption;
-    filter: string | undefined;
+  sort: SortOption | undefined; // Allow undefined for optional flags
+  filter?: string;
 }
+
 export default class List extends Command {
-    static description = 'Shows all sessions in a table (formatted times, shortened UUIDs)';
+  static description = 'Shows all sessions in a table (formatted times, shortened UUIDs).';
 
-    static examples = [
-        `$ focus list`,
-        `$ focus list --sort=date:asc`,
-        `$ focus list --filter="duration>=1h"`,
-        `$ focus list --filter="duration<=30m"`
-    ];
+  static examples = [
+    `$ focus list`,
+    `$ focus list --sort=date:asc`,
+    `$ focus list --filter="duration>=1h"`,
+    `$ focus list --filter="duration<=30m"`,
+  ];
 
-    static flags = {
-        sort: SortFlag({
-            char: 's',
-            description: 'Sort by date or duration (e.g., date:asc, duration:desc)',
-        }),
-        filter: Flags.string({
-            char: 'f',
-            description: 'Filter sessions (e.g., duration>=1h30m)',
-            parse: async (input) => parseFilterString(input, sessionFilterSchema), // Use parseFilterString
-        })
-    };
+  static flags = {
+    sort: SortFlag({
+      char: 's',
+      description: 'Sort by date or duration (e.g., date:asc, duration:desc)',
+    }),
+    filter: Flags.string({
+      char: 'f',
+      description: 'Filter sessions (e.g., duration>=1h30m)',
+    }),
+  };
 
-    async run(): Promise<void> {
-        const { flags } = await this.parse(List);
-        const { sort, filter } = flags as ListFlags;
-        const db = new FocusDatabase();
+  private db: FocusDatabase;
 
-        try {
-            let parsedFilter: FilterOption = undefined;
+  constructor(argv: string[], config: any, db?: FocusDatabase) {
+    super(argv, config);
+    // Use dependency injection for the database
+    this.db = db || new FocusDatabase();
+  }
 
-            if (filter) {
-                parsedFilter = parseAndValidateFilter(filter, sessionFilterSchema);
-            }
+  async run(): Promise<void> {
+    const { flags } = await this.parse(List);
 
-            const sessions = db.getSessions(sort, parsedFilter);
+    try {
+      const parsedFilter = this.parseAndValidateFilter(flags.filter);
+      const sortOption = this.getValidSortOption(flags.sort); // Ensure a valid SortOption
+      const sessions = this.fetchSessions(sortOption, parsedFilter);
 
-            if (sessions.length === 0) {
-                this.log('No sessions found.');
-                return;
-            }
-            generateAndDisplayTable(this, sessions, 'sessions');
+      if (sessions.length === 0) {
+        this.log('No sessions found.');
+        return;
+      }
 
-        } catch (error) {
-            if (error instanceof FocusError) {
-                this.error(error.message);
-            } else if (error instanceof Error) {
-                this.error(`Error: ${error.message}`);
-            } else {
-                this.error(`An unexpected error occurred.`);
-            }
-        } finally {
-            db.close();
-        }
+      this.displaySessions(sessions);
+
+    } catch (error) {
+      this.handleError(error);
+
+    } finally {
+      this.cleanup();
     }
+  }
+
+  private parseAndValidateFilter(filter?: string): FilterOption | undefined {
+    if (!filter) return undefined;
+
+    try {
+      return parseAndValidateFilter(filter, sessionFilterSchema);
+    } catch (error: any) {
+      if (error instanceof FocusError) {
+        throw error; // Re-throw FocusError for centralized handling
+      } else {
+        throw new FocusError(`Invalid filter format: ${error.message}`);
+      }
+    }
+  }
+
+  private getValidSortOption(sortOption?: SortOption): SortOption {
+    // Provide a default sort option if none is provided
+    return sortOption || { field: 'date', order: 'asc' };
+  }
+
+  private fetchSessions(sort: SortOption, filter?: FilterOption): any[] {
+    return this.db.getSessions(sort, filter);
+  }
+
+  private displaySessions(sessions: any[]): void {
+    generateAndDisplayTable(this, sessions, 'sessions');
+  }
+
+  private handleError(error: unknown): void {
+    if (error instanceof FocusError) {
+      this.error(error.message);
+    } else if (error instanceof Error) {
+      this.error(`Error: ${error.message}`);
+    } else {
+      this.error('An unexpected error occurred.');
+    }
+  }
+
+  private cleanup(): void {
+    this.db.close();
+  }
 }

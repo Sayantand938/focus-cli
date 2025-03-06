@@ -2,7 +2,7 @@
 import { Command } from '@oclif/core';
 import { differenceInSeconds } from 'date-fns';
 import { FocusDatabase } from '../utils/database.js';
-import { FocusError } from '../utils/error-utils.js'; // Corrected import
+import { FocusError } from '../utils/error-utils.js';
 import { formatDate, formatDuration } from '../utils/formatting-utils.js';
 
 export default class Stop extends Command {
@@ -12,35 +12,70 @@ export default class Stop extends Command {
     `$ focus stop`,
   ];
 
+  private db: FocusDatabase;
+
+  constructor(argv: string[], config: any, db?: FocusDatabase) {
+    super(argv, config);
+    // Use dependency injection for the database
+    this.db = db || new FocusDatabase();
+  }
+
   async run(): Promise<void> {
-    const db = new FocusDatabase();
     try {
-      const now = new Date();
-      const stopTime = now.toISOString(); // Store as ISO string
+      const now = this.getCurrentTime();
+      const session = this.getActiveSession();
 
-      const session = db.getOpenSession();
-      if (!session) {
-        throw new FocusError('No active session found.'); // Use FocusError
-      }
-
-      const { start_time: startTimeStr, id } = session; // Destructure here
+      const { id, start_time: startTimeStr } = session;
       const startTime = new Date(startTimeStr);
-      const durationInSeconds = differenceInSeconds(now, startTime);
+      const durationInSeconds = this.calculateDuration(startTime, now);
 
-      db.stopSession(id, stopTime, durationInSeconds);
-      this.log(`Focus session stopped at ${formatDate(now, 'MMM dd yyyy, hh:mm:ss a')}. Duration: ${formatDuration(durationInSeconds)}`); // Use formatDate and formatDuration
+      this.stopSession(id, now, durationInSeconds);
+      this.logSuccessMessage(now, durationInSeconds);
 
     } catch (error: any) {
-      if (error instanceof FocusError) {
-          this.error(error.message);
-      }
-      else if (error instanceof Error) {
-        this.error(`Failed to stop session: ${error.message}`);
-      } else {
-          this.error(`An unexpected error occurred`);
-      }
+      this.handleError(error);
     } finally {
-      db.close();
+      this.cleanup();
     }
+  }
+
+  private getCurrentTime(): Date {
+    return new Date();
+  }
+
+  private getActiveSession(): any {
+    const session = this.db.getOpenSession();
+    if (!session) {
+      throw new FocusError('No active session found.');
+    }
+    return session;
+  }
+
+  private calculateDuration(startTime: Date, stopTime: Date): number {
+    return differenceInSeconds(stopTime, startTime);
+  }
+
+  private stopSession(sessionId: string, stopTime: Date, durationInSeconds: number): void {
+    this.db.stopSession(sessionId, stopTime.toISOString(), durationInSeconds);
+  }
+
+  private logSuccessMessage(stopTime: Date, durationInSeconds: number): void {
+    this.log(
+      `Focus session stopped at ${formatDate(stopTime, 'MMM dd yyyy, hh:mm:ss a')}. Duration: ${formatDuration(durationInSeconds)}`
+    );
+  }
+
+  private handleError(error: any): void {
+    if (error instanceof FocusError) {
+      this.error(error.message);
+    } else if (error instanceof Error) {
+      this.error(`Failed to stop session: ${error.message}`);
+    } else {
+      this.error('An unexpected error occurred.');
+    }
+  }
+
+  private cleanup(): void {
+    this.db.close();
   }
 }
