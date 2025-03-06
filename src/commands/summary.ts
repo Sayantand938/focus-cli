@@ -5,7 +5,7 @@ import { parseSortString, SortFlag, SortOption } from '../utils/sort-utils.js';
 import { FocusError } from '../utils/error-utils.js';
 import { generateAndDisplayTable } from '../utils/table-utils.js';
 import { parseDurationStringToSeconds } from '../utils/duration-parser.js';
-import { parseFilterString, summaryFilterSchema, FilterOption } from '../utils/filter-utils.js'; // Import from filter-utils
+import { parseFilterString, summaryFilterSchema, FilterOption, parseAndValidateFilter } from '../utils/filter-utils.js'; // Import from filter-utils
 
 interface SummaryFlags {
   sort: SortOption;
@@ -42,12 +42,7 @@ export default class Summary extends Command {
       try {
           let parsedFilter: FilterOption = undefined;
           if(filter) {
-            const match = filter.match(/^(total|average)\s*([>=<!]=?)\s*(.+)$/);
-            if(match) {
-                const [, field, operator, valueString] = match;
-                const value = parseDurationStringToSeconds(valueString);
-                parsedFilter = {field, operator, value};
-            }
+            parsedFilter = parseAndValidateFilter(filter, summaryFilterSchema);
           }
         const summaryData = db.getSummary(sort, parsedFilter);
 

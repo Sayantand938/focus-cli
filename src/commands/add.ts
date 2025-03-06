@@ -3,54 +3,14 @@ import { Command, Args } from '@oclif/core';
 import { v4 as uuidv4 } from 'uuid';
 import { FocusDatabase } from '../utils/database.js';
 import { FocusError } from '../utils/error-utils.js'; // Corrected import
-import { formatDate, formatDuration } from '../utils/formatting.js';
+import { formatDate, formatDuration, parseTimeStringToDate } from '../utils/formatting.js';
 import { isValid, parse } from 'date-fns';
 import { z } from 'zod';
 
 const timeSchema = z.string()
     .regex(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i, 'Invalid time format. Please use "HH:MM AM/PM"')
     .transform((timeString: string): Date => {
-        const timeRegex = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i;
-        const match = timeString.trim().match(timeRegex);
-
-        if (!match) {
-          throw new z.ZodError([{
-                code: 'custom',
-                message: 'Invalid time format. Please use "HH:MM AM/PM"',
-                path: []
-            }]);
-        }
-
-        let hours = parseInt(match[1], 10);
-        const minutes = parseInt(match[2], 10);
-        const ampm = match[3].toUpperCase();
-
-        if (ampm === 'PM' && hours !== 12) {
-            hours += 12;
-        } else if (ampm === 'AM' && hours === 12) {
-            hours = 0;  // Midnight case
-        }
-
-        if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-          throw new z.ZodError([{
-                code: 'custom',
-                message: 'Invalid time. Hours must be between 0 and 23, and minutes between 0 and 59.',
-                path: []
-            }]);
-        }
-
-        const now = new Date();
-        const parsedTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes);
-
-        if (!isValid(parsedTime)) {
-          throw new z.ZodError([{
-                code: 'custom',
-                message: 'Invalid time.',
-                path: []
-            }]);
-        }
-
-        return parsedTime;
+        return parseTimeStringToDate(timeString);
     });
 
 const timeRangeSchema = z.string()

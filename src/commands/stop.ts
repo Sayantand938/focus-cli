@@ -23,18 +23,21 @@ export default class Stop extends Command {
         throw new FocusError('No active session found.'); // Use FocusError
       }
 
-      const startTime = new Date(session.start_time);
+      const { start_time: startTimeStr, id } = session; // Destructure here
+      const startTime = new Date(startTimeStr);
       const durationInSeconds = differenceInSeconds(now, startTime);
 
-      db.stopSession(session.id, stopTime, durationInSeconds);
+      db.stopSession(id, stopTime, durationInSeconds);
       this.log(`Focus session stopped at ${formatDate(now, 'MMM dd yyyy, hh:mm:ss a')}. Duration: ${formatDuration(durationInSeconds)}`); // Use formatDate and formatDuration
 
     } catch (error: any) {
       if (error instanceof FocusError) {
           this.error(error.message);
       }
-      else{
+      else if (error instanceof Error) {
         this.error(`Failed to stop session: ${error.message}`);
+      } else {
+          this.error(`An unexpected error occurred`);
       }
     } finally {
       db.close();

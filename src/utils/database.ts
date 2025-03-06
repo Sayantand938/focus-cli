@@ -8,16 +8,18 @@ import { FocusError } from './error-utils.js';
 import { SortOption, getOrderByClause } from './sort-utils.js';
 import { FilterOption, getHavingClause, getWhereClause } from './filter-utils.js';
 
-const paths = envPaths('focus-cli', { suffix: '' });
-const dbPath = join(paths.data, 'focus-cli.db');
-
-ensureDirSync(paths.data);
+function getDatabasePath(): string {
+    const paths = envPaths('focus-cli', { suffix: '' });
+    const dbPath = join(paths.data, 'focus-cli.db');
+    ensureDirSync(paths.data);
+    return dbPath;
+}
 
 export class FocusDatabase {
     private db: InstanceType<typeof Database>;
 
     constructor() {
-        this.db = new Database(dbPath);
+        this.db = new Database(getDatabasePath()); // Use the function here
         this.db.pragma('journal_mode = WAL');
         this.createSessionsTable();
     }

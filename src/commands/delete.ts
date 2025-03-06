@@ -1,4 +1,4 @@
-// src/commands/delete.ts
+//src/commands/delete.ts
 import { Command, Args } from '@oclif/core';
 import { FocusDatabase } from '../utils/database.js';
 import { FocusError } from '../utils/error-utils.js'; // Corrected import
@@ -24,8 +24,10 @@ export default class Delete extends Command {
     } catch (error: any) {
       if (error instanceof FocusError) {
           this.error(error.message);  // Consistent error handling
-      } else {
+      } else if (error instanceof Error){
           this.error(`Failed to delete session: ${error.message}`);
+      } else {
+          this.error(`An unexpected error occurred`);
       }
     } finally {
       db.close();

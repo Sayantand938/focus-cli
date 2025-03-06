@@ -78,3 +78,16 @@ export function getHavingClause(filter: FilterOption): string {
     }
     return `HAVING ${filterField} ${filter.operator} ?`;
 }
+
+export function parseAndValidateFilter(input: string, schema: typeof sessionFilterSchema | typeof summaryFilterSchema): FilterOption {
+    const parsedInput = parseFilterString(input, schema); // Use the existing function
+
+    const match = parsedInput.match(/^(duration|total|average)\s*([>=<!]=?)\s*(.+)$/);
+    if (!match) {
+        return undefined; // Or throw a more specific error if you prefer
+    }
+
+    const [, field, operator, valueString] = match;
+    const value = parseDurationStringToSeconds(valueString);
+    return { field, operator, value };
+}

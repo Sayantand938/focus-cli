@@ -5,7 +5,7 @@ import { FocusError } from '../utils/error-utils.js';
 import { parseDurationStringToSeconds } from '../utils/duration-parser.js';
 import { parseSortString, SortFlag, SortOption } from '../utils/sort-utils.js';
 import { generateAndDisplayTable } from '../utils/table-utils.js';
-import { parseFilterString, sessionFilterSchema, FilterOption } from '../utils/filter-utils.js'; // Import from filter-utils
+import { parseFilterString, sessionFilterSchema, FilterOption, parseAndValidateFilter } from '../utils/filter-utils.js'; // Import from filter-utils
 
 
 interface ListFlags {
@@ -43,12 +43,7 @@ export default class List extends Command {
             let parsedFilter: FilterOption = undefined;
 
             if (filter) {
-                const match = filter.match(/^(duration)\s*([>=<!]=?)\s*(.+)$/);
-                if (match) {
-                    const [, field, operator, valueString] = match;
-                    const value = parseDurationStringToSeconds(valueString);
-                    parsedFilter = { field, operator, value };
-                }
+                parsedFilter = parseAndValidateFilter(filter, sessionFilterSchema);
             }
 
             const sessions = db.getSessions(sort, parsedFilter);
