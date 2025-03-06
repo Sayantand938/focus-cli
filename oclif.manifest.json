@@ -11,7 +11,8 @@
       },
       "description": "Adds a focus session with a specified time range.",
       "examples": [
-        "$ focus add \"08:00 AM - 10:00 AM\""
+        "$ focus add \"08:00 AM - 10:00 AM\"",
+        "$ focus add \"12:00 PM - 01:30 PM\""
       ],
       "flags": {},
       "hasDynamicHelp": false,
@@ -58,14 +59,94 @@
         "delete.js"
       ]
     },
+    "edit": {
+      "aliases": [],
+      "args": {
+        "id": {
+          "description": "First 8 characters of the session ID",
+          "name": "id",
+          "required": true
+        }
+      },
+      "description": "Edits an existing focus session.",
+      "examples": [
+        "$ focus edit 2e54ebd4 --start_time \"12:20 AM\"",
+        "$ focus edit 2e54ebd4 --stop_time \"02:00 PM\"",
+        "$ focus edit 2e54ebd4 --date 2024-03-15 --start_time \"09:00 AM\" --stop_time \"10:30 AM\"",
+        "$ focus edit 2e54ebd4 --date 2024-03-10"
+      ],
+      "flags": {
+        "start_time": {
+          "description": "New start time in HH:MM AM/PM format",
+          "exclusive": [
+            "date"
+          ],
+          "name": "start_time",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "stop_time": {
+          "description": "New stop time in HH:MM AM/PM format",
+          "exclusive": [
+            "date"
+          ],
+          "name": "stop_time",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "date": {
+          "description": "New date in yyyy-MM-dd format",
+          "name": "date",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
+      "hasDynamicHelp": false,
+      "hiddenAliases": [],
+      "id": "edit",
+      "pluginAlias": "focus-cli",
+      "pluginName": "focus-cli",
+      "pluginType": "core",
+      "strict": true,
+      "enableJsonFlag": false,
+      "isESM": true,
+      "relativePath": [
+        "dist",
+        "commands",
+        "edit.js"
+      ]
+    },
     "list": {
       "aliases": [],
       "args": {},
       "description": "Shows all sessions in a table (formatted times, shortened UUIDs)",
       "examples": [
-        "$ focus list"
+        "$ focus list",
+        "$ focus list --sort=date:asc",
+        "$ focus list --filter=\"duration>=1h\"",
+        "$ focus list --filter=\"duration<=30m\""
       ],
-      "flags": {},
+      "flags": {
+        "sort": {
+          "char": "s",
+          "description": "Sort by date or duration (e.g., date:asc, duration:desc)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "filter": {
+          "char": "f",
+          "description": "Filter sessions (e.g., duration>=1h30m)",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
       "hasDynamicHelp": false,
       "hiddenAliases": [],
       "id": "list",
@@ -132,9 +213,30 @@
       "args": {},
       "description": "Shows total & average focus time per day with ✅ or ❌",
       "examples": [
-        "$ focus summary"
+        "$ focus summary",
+        "$ focus summary --sort total:asc",
+        "$ focus summary --sort date:desc",
+        "$ focus summary --filter=\"total>=2h\"",
+        "$ focus summary --filter=\"average<=45m\""
       ],
-      "flags": {},
+      "flags": {
+        "sort": {
+          "char": "s",
+          "description": "Sort by total, average, or date (e.g., total:asc, date:desc)",
+          "name": "sort",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        },
+        "filter": {
+          "char": "f",
+          "description": "Filter summary (e.g., total>=1h, average<=30m)",
+          "name": "filter",
+          "hasDynamicHelp": false,
+          "multiple": false,
+          "type": "option"
+        }
+      },
       "hasDynamicHelp": false,
       "hiddenAliases": [],
       "id": "summary",

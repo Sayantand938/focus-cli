@@ -99,6 +99,39 @@ export class FocusDatabase {
         return this.db.prepare(selectSQL).all(stopTime, startTime, startTime, stopTime, startTime, stopTime) as ListTable[];
     }
 
+     getOverlappingSessionsWithStartTime(startTime: string): ListTable[] {
+      const selectSQL = `SELECT * FROM sessions
+        WHERE start_time = ?`;
+      return this.db.prepare(selectSQL).all(startTime) as ListTable[];
+    }
+
+    updateDuration(id: string, duration: number) {
+        const updateSQL = `UPDATE sessions SET duration = ? WHERE id = ?`;
+        this.db.prepare(updateSQL).run(duration, id);
+    }
+
+    updateSession(id: string, startTime: string | undefined, stopTime: string | undefined) {
+        let updateSQL = `UPDATE sessions SET `;
+        const params = [];
+
+        if (startTime) {
+            updateSQL += `start_time = ?, `;
+            params.push(startTime);
+        }
+        if (stopTime) {
+            updateSQL += `stop_time = ?, `;
+            params.push(stopTime);
+        }
+
+        // Remove the trailing comma and space.
+        updateSQL = updateSQL.slice(0, -2);
+
+        updateSQL += ` WHERE id = ?`;
+        params.push(id);
+
+        this.db.prepare(updateSQL).run(...params);
+    }
+
     deleteSession(id: string): void {
         const deleteSQL = `DELETE FROM sessions WHERE id LIKE ? || '%'`;
         const result = this.db.prepare(deleteSQL).run(id);
