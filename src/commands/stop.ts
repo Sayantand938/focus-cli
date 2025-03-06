@@ -3,7 +3,7 @@ import { Command } from '@oclif/core';
 import { differenceInSeconds } from 'date-fns';
 import { FocusDatabase } from '../utils/database.js';
 import { FocusError } from '../utils/error-utils.js'; // Corrected import
-import { formatDate, formatDuration } from '../utils/formatting.js';
+import { formatDate, formatDuration } from '../utils/formatting-utils.js';
 
 export default class Stop extends Command {
   static description = 'Stops the current focus session and records the stop time and duration.';

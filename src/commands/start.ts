@@ -3,7 +3,7 @@ import { Command } from '@oclif/core';
 import { v4 as uuidv4 } from 'uuid';
 import { FocusDatabase } from '../utils/database.js';
 import { FocusError } from '../utils/error-utils.js'; // Corrected import
-import { formatDate } from '../utils/formatting.js'; // Use formatDate utility
+import { formatDate } from '../utils/formatting-utils.js'; // Use formatDate utility
 
 export default class Start extends Command {
   static description = 'Starts a focus session and logs the start time.';

@@ -3,7 +3,7 @@ import { Command, Args } from '@oclif/core';
 import { v4 as uuidv4 } from 'uuid';
 import { FocusDatabase } from '../utils/database.js';
 import { FocusError } from '../utils/error-utils.js'; // Corrected import
-import { formatDate, formatDuration, parseTimeStringToDate } from '../utils/formatting.js';
+import { formatDate, formatDuration, parseTimeStringToDate } from '../utils/formatting-utils.js';
 import { isValid, parse } from 'date-fns';
 import { z } from 'zod';
 

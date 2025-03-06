@@ -1,6 +1,6 @@
 // src/utils/database.ts
 import Database from 'better-sqlite3';
-import { Session, SummaryRow } from './types.js';
+import { ListTable, SummaryTable } from './types.js';
 import { join } from 'path';
 import envPaths from 'env-paths';
 import { ensureDirSync } from 'fs-extra';
@@ -41,21 +41,21 @@ export class FocusDatabase {
         this.db.prepare(insertSQL).run(id, startTime);
     }
 
-    getSession(id: string): Session | undefined {
+    getSession(id: string): ListTable | undefined {
         const selectSQL = `SELECT * FROM sessions WHERE id LIKE ? || '%'`;
-        return this.db.prepare(selectSQL).get(id) as Session | undefined;
+        return this.db.prepare(selectSQL).get(id) as ListTable | undefined;
     }
 
-    getOpenSession(): Session | undefined {
+    getOpenSession(): ListTable | undefined {
         const selectSQL = `SELECT * FROM sessions WHERE stop_time IS NULL`;
-        return this.db.prepare(selectSQL).get() as Session | undefined;
+        return this.db.prepare(selectSQL).get() as ListTable | undefined;
     }
 
     stopSession(id: string, stopTime: string, duration: number) {
         const updateSQL = `UPDATE sessions SET stop_time = ?, duration = ? WHERE id = ?`;
         this.db.prepare(updateSQL).run(stopTime, duration, id);
     }
-    getSessions(sortOption: SortOption, filter?: FilterOption): Session[] {
+    getSessions(sortOption: SortOption, filter?: FilterOption): ListTable[] {
         let selectSQL = `SELECT * FROM sessions`;
 
         selectSQL += ` ${getWhereClause(filter)}`;
@@ -63,9 +63,9 @@ export class FocusDatabase {
 
         const stmt = this.db.prepare(selectSQL);
         const result = filter ? stmt.all(filter.value) : stmt.all();
-        return result as Session[];
+        return result as ListTable[];
     }
-    getSummary(sortOption: SortOption, filter?: FilterOption): SummaryRow[] {
+    getSummary(sortOption: SortOption, filter?: FilterOption): SummaryTable[] {
         let summarySQL = `
       SELECT
         ROW_NUMBER() OVER () AS SL,
@@ -86,17 +86,17 @@ export class FocusDatabase {
 
         const stmt = this.db.prepare(summarySQL);
         const result = filter ? stmt.all(filter.value) : stmt.all();
-        return result as SummaryRow[];
+        return result as SummaryTable[];
     }
 
-    getOverlappingSessions(startTime: string, stopTime: string): Session[] {
+    getOverlappingSessions(startTime: string, stopTime: string): ListTable[] {
         const selectSQL = `
             SELECT * FROM sessions
             WHERE (start_time < ? AND stop_time > ?)
             OR (start_time > ? AND start_time < ?)
             OR (stop_time > ? AND stop_time < ?)
         `;
-        return this.db.prepare(selectSQL).all(stopTime, startTime, startTime, stopTime, startTime, stopTime) as Session[];
+        return this.db.prepare(selectSQL).all(stopTime, startTime, startTime, stopTime, startTime, stopTime) as ListTable[];
     }
 
     deleteSession(id: string): void {

@@ -1,8 +1,8 @@
 // src/utils/table-utils.ts
 import Table from 'cli-table3';
 import chalk from 'chalk';
-import { formatDate, formatDurationParts, getDurationParts } from './formatting.js';
-import { Session, SummaryRow } from './types.js';
+import { formatDate, formatDurationParts, getDurationParts } from './formatting-utils.js';
+import { ListTable, SummaryTable } from './types.js';
 import { Command } from '@oclif/core';
 
 function createBaseTable(head: string[]): Table.Table {
@@ -25,7 +25,7 @@ function createBaseTable(head: string[]): Table.Table {
     return table;
 }
 
-function formatSessionRow(session: Session): string[] {
+function formatSessionRow(session: ListTable): string[] {
     const { hours, minutes } = getDurationParts(session.duration);
     const duration = session.duration
         ? formatDurationParts(hours, minutes)
@@ -40,7 +40,7 @@ function formatSessionRow(session: Session): string[] {
     ];
 }
 
-function formatSummaryRow(index: number, row: SummaryRow): string[] {
+function formatSummaryRow(index: number, row: SummaryTable): string[] {
     return [
         chalk.dim(String(index + 1)),
         row.Date,
@@ -50,7 +50,7 @@ function formatSummaryRow(index: number, row: SummaryRow): string[] {
     ];
 }
 
-function generateAndDisplayTable(command: Command, data: Session[] | SummaryRow[], tableType: 'sessions' | 'summary'): void {
+function generateAndDisplayTable(command: Command, data: ListTable[] | SummaryTable[], tableType: 'sessions' | 'summary'): void {
     const head = tableType === 'sessions'
         ? ['ID', 'Date', 'Start Time', 'Stop Time', 'Duration']
         : ['SL', 'Date', 'Average', 'Total', 'Goal'];
@@ -58,11 +58,11 @@ function generateAndDisplayTable(command: Command, data: Session[] | SummaryRow[
     const table = createBaseTable(head);
 
     if (tableType === 'sessions') {
-      for (const session of data as Session[]) {
+      for (const session of data as ListTable[]) {
         table.push(formatSessionRow(session));
       }
     } else {
-        for (const [index, row] of (data as SummaryRow[]).entries()) {
+        for (const [index, row] of (data as SummaryTable[]).entries()) {
             table.push(formatSummaryRow(index, row));
         }
     }
