@@ -16,7 +16,6 @@ export default class Stop extends Command {
 
   constructor(argv: string[], config: any, db?: FocusDatabase) {
     super(argv, config);
-    // Use dependency injection for the database
     this.db = db || new FocusDatabase();
   }
 
@@ -31,8 +30,7 @@ export default class Stop extends Command {
 
       this.stopSession(id, now, durationInSeconds);
       this.logSuccessMessage(now, durationInSeconds);
-
-    } catch (error: any) {
+    } catch (error) {
       this.handleError(error);
     } finally {
       this.cleanup();
@@ -43,7 +41,7 @@ export default class Stop extends Command {
     return new Date();
   }
 
-  private getActiveSession(): any {
+  private getActiveSession(): { id: string; start_time: string } {
     const session = this.db.getOpenSession();
     if (!session) {
       throw new FocusError('No active session found.');
@@ -65,7 +63,7 @@ export default class Stop extends Command {
     );
   }
 
-  private handleError(error: any): void {
+  private handleError(error: unknown): void {
     if (error instanceof FocusError) {
       this.error(error.message);
     } else if (error instanceof Error) {

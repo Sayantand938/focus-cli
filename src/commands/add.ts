@@ -4,28 +4,25 @@ import { v4 as uuidv4 } from 'uuid';
 import { FocusDatabase } from '../utils/database.js';
 import { FocusError } from '../utils/error-utils.js';
 import { formatDate, formatDuration, parseTimeStringToDate } from '../utils/formatting-utils.js';
-import { isValid, parse } from 'date-fns';
 import { z } from 'zod';
 
 // Validation schemas
 const timeSchema = z.string()
-  .regex(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i, 'Invalid time format. Please use "HH:MM AM/PM".')
+  .regex(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i, 'Invalid time format. Use "HH:MM AM/PM".')
   .transform((timeString: string): Date => parseTimeStringToDate(timeString));
 
 const timeRangeSchema = z.string()
-  .regex(/^(\d{1,2}:\d{2}\s*(?:AM|PM)) - (\d{1,2}:\d{2}\s*(?:AM|PM))$/i, 'Invalid time range format. Please use "HH:MM AM/PM - HH:MM AM/PM".')
+  .regex(/^(\d{1,2}:\d{2}\s*(?:AM|PM)) - (\d{1,2}:\d{2}\s*(?:AM|PM))$/i, 'Invalid time range format. Use "HH:MM AM/PM - HH:MM AM/PM".')
   .transform((str) => str.split(' - '))
   .refine((parts) => parts.length === 2, { message: 'Invalid time range format.' })
   .transform(([startTimeString, stopTimeString]) => ({ startTimeString, stopTimeString }));
 
 export default class Add extends Command {
   static description = 'Adds a focus session with a specified time range.';
-
   static examples = [
     `$ focus add "08:00 AM - 10:00 AM"`,
     `$ focus add "12:00 PM - 01:30 PM"`,
   ];
-
   static args = {
     timeRange: Args.string({ description: 'Time range in the format "HH:MM AM/PM - HH:MM AM/PM"', required: true }),
   };
@@ -34,7 +31,6 @@ export default class Add extends Command {
 
   constructor(argv: string[], config: any, db?: FocusDatabase) {
     super(argv, config);
-    // Use dependency injection for the database
     this.db = db || new FocusDatabase();
   }
 
@@ -48,7 +44,6 @@ export default class Add extends Command {
 
       this.validateNoOverlappingSessions(startTimeISO, stopTimeISO);
       this.createAndLogSession(sessionId, startTimeISO, stopTimeISO, durationInSeconds);
-
     } catch (error: any) {
       this.handleError(error);
     } finally {
@@ -76,11 +71,11 @@ export default class Add extends Command {
       throw new FocusError('Start time must be before stop time.');
     }
 
-    const startTimeISO = startTime.toISOString();
-    const stopTimeISO = stopTime.toISOString();
-    const durationInSeconds = Math.floor((stopTime.getTime() - startTime.getTime()) / 1000);
-
-    return { startTimeISO, stopTimeISO, durationInSeconds };
+    return {
+      startTimeISO: startTime.toISOString(),
+      stopTimeISO: stopTime.toISOString(),
+      durationInSeconds: Math.floor((stopTime.getTime() - startTime.getTime()) / 1000),
+    };
   }
 
   private validateNoOverlappingSessions(startTimeISO: string, stopTimeISO: string): void {

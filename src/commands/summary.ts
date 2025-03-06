@@ -42,7 +42,6 @@ export default class Summary extends Command {
 
   constructor(argv: string[], config: any, db?: FocusDatabase) {
     super(argv, config);
-    // Use dependency injection for the database
     this.db = db || new FocusDatabase();
   }
 
@@ -51,7 +50,7 @@ export default class Summary extends Command {
 
     try {
       const parsedFilter = this.parseAndValidateFilter(flags.filter);
-      const sortOption = this.getValidSortOption(flags.sort); // Ensure a valid SortOption
+      const sortOption = this.getValidSortOption(flags.sort);
       const summaryData = this.fetchSummary(sortOption, parsedFilter);
 
       if (summaryData.length === 0) {
@@ -60,10 +59,8 @@ export default class Summary extends Command {
       }
 
       this.displaySummary(summaryData);
-
     } catch (error) {
       this.handleError(error);
-
     } finally {
       this.cleanup();
     }
@@ -75,16 +72,13 @@ export default class Summary extends Command {
     try {
       return parseAndValidateFilter(filter, summaryFilterSchema);
     } catch (error: any) {
-      if (error instanceof FocusError) {
-        throw error; // Re-throw FocusError for centralized handling
-      } else {
-        throw new FocusError(`Invalid filter format: ${error.message}`);
-      }
+      throw error instanceof FocusError
+        ? error
+        : new FocusError(`Invalid filter format: ${error.message}`);
     }
   }
 
   private getValidSortOption(sortOption?: SortOption): SortOption {
-    // Provide a default sort option if none is provided
     return sortOption || { field: 'date', order: 'asc' };
   }
 

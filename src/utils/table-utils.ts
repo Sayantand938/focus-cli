@@ -6,8 +6,8 @@ import { ListTable, SummaryTable } from './types.js';
 import { Command } from '@oclif/core';
 
 function createBaseTable(head: string[]): Table.Table {
-    const table = new Table({
-        head: head.map(h => chalk.blue.bold(h)), // Apply bold styling here
+    return new Table({
+        head: head.map(h => chalk.blue.bold(h)), // Apply bold styling to headers
         colAligns: ['center', 'center', 'center', 'center', 'center'],
         colWidths: [10, 12, 12, 12, 10],
         style: {
@@ -22,7 +22,6 @@ function createBaseTable(head: string[]): Table.Table {
             'right': '║', 'right-mid': '╢', 'middle': '│'
         }
     });
-    return table;
 }
 
 function formatSessionRow(session: ListTable): string[] {
@@ -58,9 +57,9 @@ function generateAndDisplayTable(command: Command, data: ListTable[] | SummaryTa
     const table = createBaseTable(head);
 
     if (tableType === 'sessions') {
-      for (const session of data as ListTable[]) {
-        table.push(formatSessionRow(session));
-      }
+        for (const session of data as ListTable[]) {
+            table.push(formatSessionRow(session));
+        }
     } else {
         for (const [index, row] of (data as SummaryTable[]).entries()) {
             table.push(formatSummaryRow(index, row));

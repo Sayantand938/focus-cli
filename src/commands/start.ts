@@ -16,7 +16,6 @@ export default class Start extends Command {
 
   constructor(argv: string[], config: any, db?: FocusDatabase) {
     super(argv, config);
-    // Use dependency injection for the database
     this.db = db || new FocusDatabase();
   }
 
@@ -27,8 +26,7 @@ export default class Start extends Command {
 
       await this.validateNoActiveSession();
       await this.createAndLogSession(sessionId, startTime);
-
-    } catch (error: any) {
+    } catch (error) {
       this.handleError(error);
     } finally {
       this.cleanup();
@@ -43,7 +41,7 @@ export default class Start extends Command {
     return new Date().toISOString();
   }
 
-  private async validateNoActiveSession(): Promise<void> {
+  private validateNoActiveSession(): void {
     const existingSession = this.db.getOpenSession();
     if (existingSession) {
       throw new FocusError(
@@ -52,17 +50,19 @@ export default class Start extends Command {
     }
   }
 
-  private async createAndLogSession(sessionId: string, startTime: string): Promise<void> {
+  private createAndLogSession(sessionId: string, startTime: string): void {
     this.db.createSession(sessionId, startTime);
     const formattedTime = formatDate(new Date(startTime), 'MMM dd yyyy, hh:mm:ss a');
     this.log(`Focus session started at ${formattedTime} with ID: ${sessionId.substring(0, 8)}`);
   }
 
-  private handleError(error: any): void {
+  private handleError(error: unknown): void {
     if (error instanceof FocusError) {
       this.error(error.message);
-    } else {
+    } else if (error instanceof Error) {
       this.error(`Failed to start session: ${error.message}`);
+    } else {
+      this.error('An unexpected error occurred.');
     }
   }
 

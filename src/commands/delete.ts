@@ -18,7 +18,6 @@ export default class Delete extends Command {
 
   constructor(argv: string[], config: any, db?: FocusDatabase) {
     super(argv, config);
-    // Use dependency injection for the database
     this.db = db || new FocusDatabase();
   }
 
@@ -48,7 +47,7 @@ export default class Delete extends Command {
 
   private handleError(error: any): void {
     if (error instanceof FocusError) {
-      this.error(error.message); // Handle FocusError specifically
+      this.error(error.message);
     } else if (error instanceof Error) {
       this.error(`Failed to delete session: ${error.message}`);
     } else {
